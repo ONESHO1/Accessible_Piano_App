@@ -1,91 +1,95 @@
+import Slider from '@react-native-community/slider';
 import { DeviceMotion } from 'expo-sensors';
-import type { DeviceMotionMeasurement } from 'expo-sensors/build/DeviceMotion';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, View, Text } from 'react-native';
+
+const { height } = Dimensions.get('window');
 
 export default function App() {
-  const [motionData, setMotionData] = useState<DeviceMotionMeasurement | null>(null);
-  const [subscription, setSubscription] = useState<ReturnType<typeof DeviceMotion.addListener> | null>(null);
-
-  const _subscribe = () => {
-    setSubscription(
-      DeviceMotion.addListener(data => {
-        setMotionData(data);
-      })
-    );
-    DeviceMotion.setUpdateInterval(50); // Update every 500ms
-  };
-
-  const _unsubscribe = () => {
-    subscription?.remove();
-    setSubscription(null);
-  };
+  const [betaValue, setBetaValue] = useState(0);
 
   useEffect(() => {
-    _subscribe();
-    return _unsubscribe;
+    DeviceMotion.setUpdateInterval(10);
+    const subscription = DeviceMotion.addListener((motionData) => {
+      const beta = motionData.rotation?.beta ?? 0;
+
+      // Clamp and normalize beta [-0.5, 1.5] -> [0, 1]
+      // const clamped = Math.max(-0.5, Math.min(beta, 1.5)); // -0.5 - 1.5
+      // const normalized = clamped; // 0 - 1
+
+      const clamped = Math.max(0, Math.min(beta, 1));
+      const normalized = clamped;
+      setBetaValue(normalized);
+    });
+
+    return () => subscription.remove();
   }, []);
 
-  const format = (label: string, value: any) => (
-    <Text style={styles.text}>
-      {label}: {value !== undefined && value !== null ? value.toFixed(3) : 'N/A'}
-    </Text>
-  );
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>📱Piano bb</Text>
-
-      {motionData ? (
-        <>
-          <Text style={styles.section}>Acceleration (w/o gravity)</Text>
-          <Text style={styles.section}>Value</Text>
-          {format('alpha (x)', motionData.rotation?.gamma)}
-          {format('beta (y)', motionData.rotation?.beta)}
-          
-        </>
-      ) : (
-        <Text style={styles.text}>Waiting for motion data...</Text>
-      )}
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={subscription ? _unsubscribe : _subscribe} style={styles.button}>
-          <Text>{subscription ? 'Stop' : 'Start'}</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.sliderWrapper}>
+        {/* STEP NUMBER TEXT */}
+        <View style={styles.stepTextContainer}>
+          <View style={{ transform: [{ rotate: '-90deg' }] }}>
+            <Text style={styles.stepText}>
+              Step {Math.round((1 - betaValue) / 0.5) + 1}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.verticalSliderContainer}>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={1}
+            value={1- betaValue} // invert so top = max
+            minimumTrackTintColor="#000000"
+            maximumTrackTintColor="#000000"
+            thumbTintColor="#000000"
+            // renderStepNumber
+            step={0.50}
+          />
+        </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    flexGrow: 1,
+    flex: 1,
+    // backgroundColor: '#000000'
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+  sliderWrapper: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // backgroundColor: '#000000'
   },
-  section: {
-    marginTop: 16,
-    fontWeight: 'bold',
-    fontSize: 16,
+  verticalSliderContainer: {
+    transform: [{ rotate: '-90deg' }],
+    width: height * 0.85,
+    height: 100,
+    justifyContent: 'center',
+    // backgroundColor: '#000000'
   },
-  text: {
-    fontSize: 14,
-    marginVertical: 2,
+  slider: {
+    width: '100%',
+    height: 100,
+    // backgroundColor: '#000000'
   },
-  buttonContainer: {
-    marginTop: 30,
+  stepTextContainer: {
+    position: 'absolute',
+    top: 20,
     alignItems: 'center',
   },
-  button: {
-    backgroundColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
-  },
+
+  stepText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  }
 });
