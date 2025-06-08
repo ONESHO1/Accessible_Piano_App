@@ -5,10 +5,6 @@ interface StepValueProps {
   betaValue: number;
 }
 
-/**
- * StepValue component
- * Calculates and displays the current step number based on the betaValue.
- */
 export default function StepValue({ betaValue }: StepValueProps) {
   // Original calculation: Math.round((1 - betaValue) / 0.5) + 1
   // If betaValue goes from 0 to 1:
@@ -18,9 +14,9 @@ export default function StepValue({ betaValue }: StepValueProps) {
   const stepNumber = Math.round((1 - betaValue) / 0.5) + 1;
 
   return (
-    <View style={styles.stepTextContainer}>
-      <View style={{ transform: [{ rotate: '-90deg' }] }}>
-        <Text style={styles.stepText}>
+    <View>
+      <View>
+        <Text>
           Step {stepNumber}
         </Text>
       </View>
@@ -29,17 +25,4 @@ export default function StepValue({ betaValue }: StepValueProps) {
 }
 
 const styles = StyleSheet.create({
-  stepTextContainer: {
-    // position: 'absolute',
-    top: 25, // Adjust as needed
-    right:20,
-    // width: 60,
-    alignItems: 'center',
-    // justifyContent: 'center'
-  },
-  stepText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
 });

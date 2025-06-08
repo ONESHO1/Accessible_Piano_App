@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { DeviceMotion } from 'expo-sensors';
 
 export const useDeviceMotion = (updateInterval: number = 10) => {
   const [betaValue, setBetaValue] = useState<number>(0);
 
   useEffect(() => {
+    StatusBar.setHidden(true, 'fade');
     DeviceMotion.setUpdateInterval(updateInterval);
     const subscription = DeviceMotion.addListener((motionData) => {
       const beta = motionData.rotation?.beta ?? 0;
