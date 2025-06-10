@@ -1,5 +1,7 @@
+import { Audio } from 'expo-av';
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { soundFiles } from '../constants/constants';
 
 interface noteProps {
   note: string;
@@ -14,7 +16,7 @@ const blackKeyOffsets: { [key: string]: number } = {
   'BF': 5.7,
 };
 
-const whiteKeyHeight = 80;
+const whiteKeyHeight = 90;
 const blackKeyHeight = 50;
 
 export default function KeyComponent({note, betaValue}: noteProps) {
@@ -25,12 +27,44 @@ export default function KeyComponent({note, betaValue}: noteProps) {
     ? [styles.KeyStyleFlat, { top: blackKeyOffsets[note] * whiteKeyHeight }]
     : styles.KeyStyle;
 
+  // const playSound = () => {
+  //   console.log(`Pressed key: ${note}, Step: ${stepNumber}`);
+  // }
+
+  const playSound = async () => {
+    const key = `${note}${stepNumber}`;
+    try {
+      const { sound } = await Audio.Sound.createAsync(soundFiles[key]);
+      await sound.playAsync();
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+
+      console.log(`Playing note: ${key}`);
+    } catch (error) {
+      console.error(`Error playing ${key}.mp3:`, error);
+    }
+  };
+
   return (
-    <View style={style}>
-      <Text style={styles.keyTextStyle}>
+    // ----
+
+    <TouchableOpacity onPressIn={playSound} activeOpacity={0.1} style={style}>
+      {/* <Text style={styles.keyTextStyle}>
         {note} {stepNumber}
-      </Text>
-    </View>
+      </Text> */}
+    </TouchableOpacity>
+
+    // ----
+
+    // <View style={style}>
+    //   <Text style={styles.keyTextStyle}>
+    //     {note} {stepNumber}
+    //   </Text>
+    // </View>
   );
 }
 
